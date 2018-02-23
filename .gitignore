@@ -286,3 +286,15 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+## Pulled from VS Code template
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+
+## Personal common
+**/_IGNORE
+**/_TMP
