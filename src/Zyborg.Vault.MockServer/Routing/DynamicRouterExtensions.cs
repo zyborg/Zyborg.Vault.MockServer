@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -392,15 +394,35 @@ namespace Zyborg.Vault.MockServer.Routing
         /// <param name="template">The route template.</param>
         /// <param name="action">The action to apply to the <see cref="IApplicationBuilder"/>.</param>
         /// <returns>A reference to the <paramref name="builder"/> after this operation has completed.</returns>
-        public static DynamicRouter MapMiddlewareVerb(
-            this DynamicRouter builder,
-            string verb,
-            string template,
-            Action<IApplicationBuilder> action)
+        public static DynamicRouter MapMiddlewareVerb(this DynamicRouter builder, string verb,
+            string template, Action<IApplicationBuilder> action)
         {
             var nested = builder.ApplicationBuilder.New();
             action(nested);
             return builder.MapVerb(verb, template, nested.Build());
+        }
+
+        public static DynamicRouter MapHandler(this DynamicRouter builder, string mountTemplate,
+            IRequestHandler handler)
+        {
+            mountTemplate = mountTemplate.TrimEnd('/');
+            var lrs = handler.GetType().GetCustomAttributes<LocalRouteAttribute>(false);
+            var templates = lrs?.Select(x => string.IsNullOrEmpty(x.Template)
+                    ? mountTemplate
+                    : $"{mountTemplate}/{x.Template.Trim('/')}").ToArray();
+
+            if (templates?.Length == 0)
+                templates = new[] { mountTemplate };
+
+            foreach (var t in templates)
+            {
+                builder.MapRoute(t, async context => {
+                    var result = await handler.HandleAsync(context);
+                    await result.EvaluateAsync(context);
+                });
+            }
+
+            return builder;
         }
 
         private static IInlineConstraintResolver GetConstraintResolver(DynamicRouter dynRouter)
