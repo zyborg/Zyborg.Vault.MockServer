@@ -1,20 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
-namespace Zyborg.Vault.MockServer.Routing
+namespace Zyborg.Vault.MockServer.WebHandler
 {
-    public interface IHandlerResult
-    {
-        Task EvaluateAsync(HttpContext context);
-    }
-
-    public abstract class HandlerResult : IHandlerResult
-    {
-        public abstract Task EvaluateAsync(HttpContext context);
-    }
-
     public class HandlerResult<TValue> : IHandlerResult
     {
         public HandlerResult(TValue value) =>
@@ -34,7 +23,7 @@ namespace Zyborg.Vault.MockServer.Routing
                 new HandlerResult<TValue>(result);
 
         public IHandlerResult ToResult() =>
-                Result ?? new Results.ObjectResult(Value);
+                Result ?? Results.Object(Value);
 
         Task IHandlerResult.EvaluateAsync(HttpContext context) =>
                 ToResult().EvaluateAsync(context);

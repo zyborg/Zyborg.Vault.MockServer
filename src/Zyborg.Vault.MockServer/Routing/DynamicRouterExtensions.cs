@@ -141,16 +141,29 @@ namespace Zyborg.Vault.MockServer.Routing
         /// <param name="dynRouter">The <see cref="DynamicRouter"/>.</param>
         /// <param name="template">The route template.</param>
         /// <param name="handler">The <see cref="RequestDelegate"/> route handler.</param>
+        /// <param name="defaults">
+        /// An object that contains default values for route parameters. The object's properties represent the names
+        /// and values of the default values.
+        /// </param>
+        /// <param name="constraints">
+        /// An object that contains constraints for the route. The object's properties represent the names and values
+        /// of the constraints.
+        /// </param>
+        /// <param name="dataTokens">
+        /// An object that contains data tokens for the route. The object's properties represent the names and values
+        /// of the data tokens.
+        /// </param>
         /// <returns>A reference to the <paramref name="dynRouter"/> after this operation has completed.</returns>
         public static DynamicRouter MapRoute(this DynamicRouter dynRouter, string template,
-            RequestDelegate handler)
+            RequestDelegate handler, object defaults = null, object constraints = null,
+            object dataTokens = null)
         {
             var route = new Route(
                 new RouteHandler(handler),
                 template,
-                defaults: null,
-                constraints: null,
-                dataTokens: null,
+                defaults: defaults == null ? null : new RouteValueDictionary(defaults),
+                constraints: constraints == null ? null : new RouteValueDictionary(constraints),
+                dataTokens: dataTokens == null ? null : new RouteValueDictionary(dataTokens),
                 inlineConstraintResolver: GetConstraintResolver(dynRouter));
 
             dynRouter.Add(route);
@@ -402,28 +415,6 @@ namespace Zyborg.Vault.MockServer.Routing
             return builder.MapVerb(verb, template, nested.Build());
         }
 
-        public static DynamicRouter MapHandler(this DynamicRouter builder, string mountTemplate,
-            IRequestHandler handler)
-        {
-            mountTemplate = mountTemplate.TrimEnd('/');
-            var lrs = handler.GetType().GetCustomAttributes<LocalRouteAttribute>(false);
-            var templates = lrs?.Select(x => string.IsNullOrEmpty(x.Template)
-                    ? mountTemplate
-                    : $"{mountTemplate}/{x.Template.Trim('/')}").ToArray();
-
-            if (templates?.Length == 0)
-                templates = new[] { mountTemplate };
-
-            foreach (var t in templates)
-            {
-                builder.MapRoute(t, async context => {
-                    var result = await handler.HandleAsync(context);
-                    await result.EvaluateAsync(context);
-                });
-            }
-
-            return builder;
-        }
 
         private static IInlineConstraintResolver GetConstraintResolver(DynamicRouter dynRouter)
         {

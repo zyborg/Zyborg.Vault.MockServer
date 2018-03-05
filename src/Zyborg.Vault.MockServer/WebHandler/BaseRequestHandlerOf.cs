@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Zyborg.Vault.MockServer.Routing
+namespace Zyborg.Vault.MockServer.WebHandler
 {
     public abstract class BaseRequestHandler<TObject> : BaseRequestHandler
     {

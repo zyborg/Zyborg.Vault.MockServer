@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Zyborg.Vault.MockServer.Routing.Results;
 
-namespace Zyborg.Vault.MockServer.Routing
+namespace Zyborg.Vault.MockServer.WebHandler
 {
     public abstract class BaseRequestHandler : IRequestHandler
     {
@@ -40,7 +39,7 @@ namespace Zyborg.Vault.MockServer.Routing
                     return await HandleDeleteAsync(http, childPath);
             }
 
-            return await Task.FromResult(StatusCodeResult.MethodNotAllowedResult);
+            return await Task.FromResult(Results.MethodNotAllowed);
         }
 
         public abstract Task<IHandlerResult> HandleListAsync(HttpContext http, string childPath);
